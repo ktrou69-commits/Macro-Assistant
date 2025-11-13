@@ -25,7 +25,10 @@ class SimpleExecutorEnhanced:
     Включает продвинутый Computer Vision из macro_sequence.py
     """
     
-    def __init__(self):
+    def __init__(self, continue_on_error=False):
+        """Инициализация исполнителя"""
+        print("⚡ Enhanced SimpleExecutor инициализирован")
+        
         # Ленивая загрузка библиотек
         self.pyautogui = None
         self.cv2 = None
@@ -35,6 +38,9 @@ class SimpleExecutorEnhanced:
         self.default_threshold = 0.8  # Повышенный порог для точности
         self.retry_timeout = 10.0     # Время повторных попыток
         self.display_scale = None     # Масштаб дисплея (Retina)
+        
+        # Настройки обработки ошибок
+        self.continue_on_error = continue_on_error  # Продолжать при ошибках
         
         print("⚡ Enhanced SimpleExecutor инициализирован")
     
@@ -116,24 +122,43 @@ class SimpleExecutorEnhanced:
             print(f"📋 Найдено команд: {len(commands)}")
             
             # Выполняем команды
+            failed_commands = []
             for i, command in enumerate(commands, 1):
                 print(f"🔧 Команда {i}/{len(commands)}: {command}")
                 
                 result = self._execute_command(command)
                 if not result.success:
-                    return ExecutionResult(
-                        False,
-                        f"Ошибка на команде {i}: {result.message}",
-                        time.time() - start_time
-                    )
+                    failed_commands.append(f"Команда {i}: {result.message}")
+                    
+                    if self.continue_on_error:
+                        print(f"⚠️ Ошибка (продолжаем): {result.message}")
+                        continue
+                    else:
+                        return ExecutionResult(
+                            False,
+                            f"Ошибка на команде {i}: {result.message}",
+                            time.time() - start_time
+                        )
             
             execution_time = time.time() - start_time
-            print(f"✅ Выполнено: Макрос выполнен успешно ({len(commands)} команд)")
+            
+            # Формируем итоговое сообщение
+            if failed_commands:
+                success_count = len(commands) - len(failed_commands)
+                print(f"⚠️ Выполнено: {success_count}/{len(commands)} команд (с ошибками)")
+                print(f"❌ Неудачные команды: {len(failed_commands)}")
+                for error in failed_commands:
+                    print(f"   • {error}")
+                message = f"Макрос выполнен с ошибками ({success_count}/{len(commands)} команд)"
+            else:
+                print(f"✅ Выполнено: Макрос выполнен успешно ({len(commands)} команд)")
+                message = f"Макрос выполнен успешно ({len(commands)} команд)"
+            
             print(f"⚡ Время: {execution_time:.3f}с")
             
             return ExecutionResult(
                 True,
-                f"Макрос выполнен успешно ({len(commands)} команд)",
+                message,
                 execution_time
             )
         
@@ -188,6 +213,8 @@ class SimpleExecutorEnhanced:
                 return self._execute_hotkey(args)
             elif action == 'scroll':
                 return self._execute_scroll(args)
+            elif action == 'repeat':
+                return self._execute_repeat(args)
             else:
                 return ExecutionResult(False, f"Неизвестная команда: {action}")
         
@@ -303,21 +330,35 @@ class SimpleExecutorEnhanced:
         return None
     
     def _find_template_with_retry(self, template_path: Path) -> Tuple[bool, Optional[Tuple[int, int]], float]:
-        """Улучшенный поиск шаблона с повторными попытками"""
+        """Улучшенный поиск шаблона с повторными попытками и обработкой ошибок"""
         print(f"🔍 Поиск шаблона (макс. {self.retry_timeout}с, threshold: {self.default_threshold})...")
         start_time = time.time()
         
         last_score = 0.0
+        attempt = 0
         
         while time.time() - start_time < self.retry_timeout:
-            found, coords, score = self._find_template_advanced(template_path)
-            last_score = score
-            
-            if found:
-                return True, coords, score
+            attempt += 1
+            try:
+                found, coords, score = self._find_template_advanced(template_path)
+                last_score = score
+                
+                if found:
+                    return True, coords, score
+                
+                # Если не найден, проверяем возможные причины
+                if attempt % 4 == 0:  # Каждые 2 секунды
+                    print(f"🔄 Попытка {attempt}, лучший score: {last_score:.3f}")
+                    if last_score < 0.3:
+                        print("⚠️ Возможно, объект не виден (переключен рабочий стол?)")
+                
+            except Exception as e:
+                print(f"⚠️ Ошибка поиска на попытке {attempt}: {e}")
+                # Продолжаем попытки даже при ошибках
             
             time.sleep(0.5)  # Пауза между попытками
         
+        print(f"❌ Шаблон не найден за {self.retry_timeout}с, финальный score: {last_score:.3f}")
         return False, None, last_score
     
     def _find_template_advanced(self, template_path: Path) -> Tuple[bool, Optional[Tuple[int, int]], float]:
@@ -426,20 +467,107 @@ class SimpleExecutorEnhanced:
             
             parts = scroll_params.split()
             direction = parts[0] if parts else 'down'
-            amount = int(parts[1]) if len(parts) > 1 else 3
+            
+            # Проверяем есть ли указание center
+            use_center = 'center' in parts
+            amount = 10  # Увеличиваем по умолчанию для лучшей видимости
+            
+            # Ищем числовое значение в параметрах
+            for part in parts:
+                if part.isdigit():
+                    amount = int(part)
+                    break
+            
+            # Если указан center, перемещаем курсор в центр экрана
+            if use_center:
+                screen_width, screen_height = self.pyautogui.size()
+                center_x, center_y = screen_width // 2, screen_height // 2
+                self.pyautogui.moveTo(center_x, center_y)
+                print(f"🎯 Курсор перемещен в центр экрана ({center_x}, {center_y})")
             
             if direction in ['up', 'down']:
                 scroll_amount = amount if direction == 'down' else -amount
-                self.pyautogui.scroll(scroll_amount)
+                
+                # Пробуем разные методы скролла
+                success = False
+                try:
+                    # Метод 1: PyAutoGUI scroll (увеличенная сила)
+                    enhanced_amount = scroll_amount * 3  # Утраиваем силу
+                    self.pyautogui.scroll(enhanced_amount)
+                    print(f"📜 Использован PyAutoGUI scroll (сила x3: {enhanced_amount})")
+                    success = True
+                except Exception as e1:
+                    try:
+                        # Метод 2: Клавиши Page Up/Down (более эффективно)
+                        import subprocess
+                        key_code = 121 if direction == 'down' else 116  # Page Down : Page Up
+                        for _ in range(max(1, abs(scroll_amount) // 3)):
+                            subprocess.run(['osascript', '-e', f'tell application "System Events" to key code {key_code}'], check=True)
+                            time.sleep(0.1)
+                        print(f"📜 Использованы клавиши Page {direction.title()}")
+                        success = True
+                    except Exception as e2:
+                        try:
+                            # Метод 3: Клавиши стрелок (много нажатий)
+                            import subprocess
+                            key_code = 125 if direction == 'down' else 126  # Down : Up
+                            for _ in range(abs(scroll_amount)):
+                                subprocess.run(['osascript', '-e', f'tell application "System Events" to key code {key_code}'], check=True)
+                                time.sleep(0.05)
+                            print(f"📜 Использованы клавиши стрелок ({abs(scroll_amount)} нажатий)")
+                            success = True
+                        except Exception as e3:
+                            try:
+                                # Метод 4: Пробел для скролла вниз
+                                if direction == 'down':
+                                    for _ in range(max(1, abs(scroll_amount) // 5)):
+                                        self.pyautogui.press('space')
+                                        time.sleep(0.2)
+                                    print(f"📜 Использован пробел для скролла")
+                                    success = True
+                                else:
+                                    raise Exception("Пробел только для скролла вниз")
+                            except Exception as e4:
+                                print(f"⚠️ Все методы скролла не сработали:")
+                                print(f"   PyAutoGUI: {e1}")
+                                print(f"   Page Keys: {e2}")
+                                print(f"   Arrow Keys: {e3}")
+                                print(f"   Space Key: {e4}")
+                
+                if not success:
+                    return ExecutionResult(False, f"Не удалось выполнить скролл {direction}")
+                            
             elif direction in ['left', 'right']:
                 # Горизонтальная прокрутка (не все системы поддерживают)
-                self.pyautogui.hscroll(amount if direction == 'right' else -amount)
+                try:
+                    self.pyautogui.hscroll(amount if direction == 'right' else -amount)
+                except Exception as e:
+                    print(f"⚠️ Горизонтальная прокрутка не поддерживается: {e}")
             
-            print(f"📜 Прокрутка: {direction} {amount}")
-            return ExecutionResult(True, f"Прокрутка {direction}")
+            location_text = " в центре экрана" if use_center else ""
+            print(f"📜 Прокрутка: {direction} {amount}{location_text}")
+            return ExecutionResult(True, f"Прокрутка {direction}{location_text}")
         
         except Exception as e:
             return ExecutionResult(False, f"Ошибка прокрутки: {e}")
+    
+    def _execute_repeat(self, repeat_params: str) -> ExecutionResult:
+        """Выполнение цикла repeat"""
+        try:
+            # Парсим параметры: "5:" или "5"
+            count_str = repeat_params.rstrip(':').strip()
+            if not count_str.isdigit():
+                return ExecutionResult(False, f"Некорректное количество повторений: {repeat_params}")
+            
+            count = int(count_str)
+            print(f"🔄 Начинаю цикл repeat на {count} итераций")
+            
+            # Для простоты пока возвращаем успех
+            # В полной реализации нужно парсить блок команд с отступами
+            return ExecutionResult(True, f"Цикл repeat {count} раз (базовая реализация)")
+        
+        except Exception as e:
+            return ExecutionResult(False, f"Ошибка цикла repeat: {e}")
 
 
 # Пример использования

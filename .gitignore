@@ -174,3 +174,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Test files (temporary)
+test_scroll_macro.atlas
+*_test_*.atlas
+debug_*.py
+test_output/
