@@ -1,0 +1,136 @@
+{
+  "name": "macro_generator",
+  "description": "Главный AI модуль для генерации макросов автоматизации из естественного языка",
+  "version": "1.0.0",
+  "author": "Macro-Assistant Team",
+  "priority": 1,
+  
+  "ai_settings": {
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "max_tokens": 3000,
+    "timeout": 45,
+    "system_role": "macro_generation_expert"
+  },
+  
+  "module_settings": {
+    "cache_results": true,
+    "cache_ttl": 1800,
+    "max_retries": 3,
+    "retry_delay": 2,
+    "enable_dsl_validation": true,
+    "enable_auto_correction": true,
+    "generate_metadata": true
+  },
+  
+  "keywords": [
+    "макрос",
+    "автоматизация",
+    "создай",
+    "сделай",
+    "выполни",
+    "запусти",
+    "открой",
+    "найди",
+    "кликни",
+    "введи",
+    "macro",
+    "automation",
+    "create",
+    "make",
+    "do",
+    "execute",
+    "run",
+    "open",
+    "find",
+    "click",
+    "type"
+  ],
+  
+  "capabilities": [
+    "Генерация .atlas макросов из естественного языка",
+    "Поддержка веб-автоматизации (YouTube, Google, Twitter и др.)",
+    "Системная автоматизация (Calculator, Finder, Safari и др.)",
+    "Spotlight поиск и файловые операции",
+    "Математические вычисления",
+    "Многошаговые сценарии с условиями и циклами",
+    "Автоматическая валидация и исправление DSL",
+    "Генерация метаданных и документации"
+  ],
+  
+  "supported_platforms": [
+    "macOS",
+    "Windows",
+    "Linux"
+  ],
+  
+  "dsl_commands": [
+    "open",
+    "click",
+    "double_click",
+    "right_click", 
+    "type",
+    "paste",
+    "press",
+    "hotkey",
+    "scroll",
+    "wait",
+    "sleep",
+    "repeat",
+    "if",
+    "else",
+    "while",
+    "for_each",
+    "set_variable",
+    "get_variable",
+    "selenium_init",
+    "selenium_click",
+    "selenium_type",
+    "selenium_close",
+    "system_command"
+  ],
+  
+  "examples": [
+    {
+      "input": "найди на YouTube видео про Python",
+      "expected_output": "Веб-автоматизация для поиска на YouTube",
+      "category": "web_automation"
+    },
+    {
+      "input": "открой калькулятор и посчитай 25 * 17",
+      "expected_output": "Системная автоматизация с математическими операциями",
+      "category": "system_automation"
+    },
+    {
+      "input": "найди файлы PDF через Spotlight",
+      "expected_output": "Поиск файлов через системный Spotlight",
+      "category": "spotlight_automation"
+    },
+    {
+      "input": "создай макрос для входа в Gmail",
+      "expected_output": "Комплексная веб-автоматизация с формами",
+      "category": "complex_automation"
+    }
+  ],
+  
+  "integration": {
+    "requires_modules": [
+      "template_parser",
+      "selector_creator", 
+      "variable_creator",
+      "structure_builder"
+    ],
+    "provides_data": [
+      "atlas_macros",
+      "execution_metadata",
+      "generated_variables"
+    ]
+  },
+  
+  "performance": {
+    "target_generation_time": "1-3s",
+    "cache_hit_rate": "85%",
+    "success_rate": "90%",
+    "average_macro_length": "5-15 commands"
+  }
+}

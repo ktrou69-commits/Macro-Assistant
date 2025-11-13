@@ -1,0 +1,187 @@
+{
+  "timing_rules": {
+    "description": "Правила для пауз и ожиданий в макросах",
+    "rules": [
+      {
+        "condition": "after_app_launch",
+        "wait_time": "2-3s",
+        "reason": "Приложению нужно время для полной загрузки"
+      },
+      {
+        "condition": "after_web_navigation", 
+        "wait_time": "3-5s",
+        "reason": "Веб-страница должна полностью загрузиться"
+      },
+      {
+        "condition": "after_click",
+        "wait_time": "0.5-1s", 
+        "reason": "Анимации и отклик интерфейса"
+      },
+      {
+        "condition": "after_type",
+        "wait_time": "0.2-0.5s",
+        "reason": "Обработка ввода и автодополнение"
+      },
+      {
+        "condition": "before_search",
+        "wait_time": "1-2s",
+        "reason": "Подготовка поискового интерфейса"
+      }
+    ]
+  },
+  
+  "naming_rules": {
+    "description": "Правила именования элементов и переменных",
+    "conventions": [
+      {
+        "type": "app_names",
+        "format": "PascalCase",
+        "examples": ["Calculator", "ChromeApp", "SafariApp", "FinderApp"]
+      },
+      {
+        "type": "button_elements", 
+        "format": "descriptive_name",
+        "examples": ["button_search", "ChromeNewTab", "YouTube-Play-btn"]
+      },
+      {
+        "type": "variables",
+        "format": "snake_case",
+        "examples": ["search_query", "user_name", "file_path"]
+      },
+      {
+        "type": "selectors",
+        "format": "css_standard",
+        "examples": ["input#search", "button.submit", "[data-testid='login']"]
+      }
+    ]
+  },
+  
+  "safety_rules": {
+    "description": "Правила безопасности для генерации макросов",
+    "forbidden_actions": [
+      "Удаление файлов без подтверждения",
+      "Изменение системных настроек",
+      "Отправка личных данных",
+      "Выполнение потенциально опасных команд",
+      "Доступ к паролям и секретам"
+    ],
+    "required_confirmations": [
+      "Покупки и финансовые операции",
+      "Отправка сообщений и email",
+      "Публикация в социальных сетях",
+      "Изменение важных настроек"
+    ],
+    "safe_actions": [
+      "Поиск информации",
+      "Навигация по сайтам",
+      "Просмотр контента",
+      "Математические вычисления",
+      "Открытие приложений"
+    ]
+  },
+  
+  "optimization_rules": {
+    "description": "Правила оптимизации макросов",
+    "principles": [
+      {
+        "rule": "minimize_commands",
+        "description": "Используй минимальное количество команд для достижения цели"
+      },
+      {
+        "rule": "prefer_dom_over_vision",
+        "description": "Для веб-сайтов предпочитай selenium команды vision командам"
+      },
+      {
+        "rule": "group_related_actions",
+        "description": "Группируй связанные действия вместе"
+      },
+      {
+        "rule": "add_error_handling",
+        "description": "Добавляй проверки и альтернативные пути"
+      },
+      {
+        "rule": "use_efficient_selectors",
+        "description": "Используй быстрые и надежные CSS селекторы"
+      }
+    ]
+  },
+  
+  "platform_specific": {
+    "macOS": {
+      "hotkeys": {
+        "copy": "cmd+c",
+        "paste": "cmd+v", 
+        "select_all": "cmd+a",
+        "spotlight": "cmd+space",
+        "new_tab": "cmd+t",
+        "close_tab": "cmd+w"
+      },
+      "system_apps": [
+        "Calculator",
+        "Finder", 
+        "Safari",
+        "System Preferences",
+        "Terminal",
+        "TextEdit"
+      ]
+    },
+    "Windows": {
+      "hotkeys": {
+        "copy": "ctrl+c",
+        "paste": "ctrl+v",
+        "select_all": "ctrl+a", 
+        "start_menu": "win",
+        "new_tab": "ctrl+t",
+        "close_tab": "ctrl+w"
+      },
+      "system_apps": [
+        "Calculator",
+        "Explorer",
+        "Edge", 
+        "Settings",
+        "Command Prompt",
+        "Notepad"
+      ]
+    }
+  },
+  
+  "error_handling": {
+    "description": "Правила обработки ошибок в макросах",
+    "strategies": [
+      {
+        "error_type": "element_not_found",
+        "solution": "Добавить wait и повторную попытку"
+      },
+      {
+        "error_type": "slow_loading",
+        "solution": "Увеличить время ожидания"
+      },
+      {
+        "error_type": "network_issues", 
+        "solution": "Добавить проверку подключения"
+      },
+      {
+        "error_type": "app_crash",
+        "solution": "Перезапуск приложения"
+      }
+    ]
+  },
+  
+  "complexity_guidelines": {
+    "simple": {
+      "max_commands": 10,
+      "max_apps": 1,
+      "description": "Простые одношаговые действия"
+    },
+    "medium": {
+      "max_commands": 25,
+      "max_apps": 2,
+      "description": "Многошаговые сценарии с условиями"
+    },
+    "complex": {
+      "max_commands": 50,
+      "max_apps": 3,
+      "description": "Сложные бизнес-процессы с циклами"
+    }
+  }
+}
