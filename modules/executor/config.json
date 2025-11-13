@@ -1,0 +1,42 @@
+{
+  "name": "executor",
+  "description": "Модуль выполнения .atlas макросов через DSL Engine и Vision Engine",
+  "version": "1.0.0",
+  "author": "Macro-Assistant Team",
+  "priority": 10,
+  
+  "capabilities": [
+    "Выполнение .atlas макросов",
+    "Computer Vision через OpenCV",
+    "Selenium веб-автоматизация", 
+    "Системные команды macOS/Windows",
+    "PyAutoGUI автоматизация",
+    "Обработка ошибок и восстановление"
+  ],
+  
+  "keywords": [
+    "выполни",
+    "запусти",
+    "execute",
+    "run",
+    "макрос",
+    "macro",
+    "atlas"
+  ],
+  
+  "examples": [
+    {
+      "input": "выполни макрос chrome_new_tab.atlas",
+      "expected_output": "Выполнение .atlas файла",
+      "category": "macro_execution"
+    }
+  ],
+  
+  "integration": {
+    "requires_modules": [],
+    "provides_data": [
+      "execution_results",
+      "performance_metrics"
+    ]
+  }
+}
