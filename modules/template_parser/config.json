@@ -1,0 +1,67 @@
+{
+  "name": "template_parser",
+  "description": "Модуль управления визуальными шаблонами для Computer Vision",
+  "version": "1.0.0",
+  "author": "Macro-Assistant Team",
+  "priority": 5,
+  
+  "capabilities": [
+    "Сканирование и индексация шаблонов",
+    "Создание уникальных имен для шаблонов",
+    "Организация структуры templates/",
+    "Генерация метаданных шаблонов",
+    "Оптимизация шаблонов для поиска",
+    "Автоматическое именование по содержимому"
+  ],
+  
+  "keywords": [
+    "шаблон",
+    "template",
+    "изображение",
+    "картинка",
+    "фото",
+    "скриншот",
+    "элемент",
+    "кнопка",
+    "поле"
+  ],
+  
+  "supported_formats": [
+    ".png",
+    ".jpg", 
+    ".jpeg",
+    ".bmp",
+    ".tiff"
+  ],
+  
+  "examples": [
+    {
+      "input": "создай шаблон для кнопки YouTube Play",
+      "expected_output": "Создание шаблона YouTube-Play-btn.png",
+      "category": "template_creation"
+    },
+    {
+      "input": "найди все шаблоны Chrome",
+      "expected_output": "Список шаблонов Chrome приложения",
+      "category": "template_search"
+    }
+  ],
+  
+  "template_naming": {
+    "pattern": "{App}-{Element}-{Type}",
+    "examples": [
+      "Chrome-NewTab-btn.png",
+      "YouTube-Search-field.png",
+      "Calculator-Number5-btn.png"
+    ]
+  },
+  
+  "integration": {
+    "requires_modules": [],
+    "provides_data": [
+      "template_index",
+      "template_metadata",
+      "naming_suggestions"
+    ]
+  }
+}

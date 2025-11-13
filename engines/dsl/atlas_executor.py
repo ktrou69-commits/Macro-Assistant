@@ -30,8 +30,8 @@ class AtlasExecutor:
         """Инициализация исполнителя"""
         # Ленивая загрузка зависимостей
         self.pyautogui = None
-        self.selenium_driver = None
-        self.vision_engine = None
+        self.selenium_engine = None
+        self.template_matcher = None
         
         # Переменные выполнения
         self.variables = {}
@@ -180,10 +180,17 @@ class AtlasExecutor:
     def _click_template(self, template_name: str) -> ExecutionResult:
         """Клик по шаблону (через Vision Engine)"""
         try:
-            # TODO: Интеграция с Vision Engine
-            # Пока используем заглушку
-            self.logger.warning(f"⚠️ Vision Engine не реализован, пропускаем клик по {template_name}")
-            return ExecutionResult(True, f"Клик по шаблону {template_name} (заглушка)")
+            if not self.template_matcher:
+                from engines.vision.template_matcher import TemplateMatcher
+                self.template_matcher = TemplateMatcher()
+            
+            # Ищем и кликаем по шаблону
+            success = self.template_matcher.click_template(template_name, timeout=5.0)
+            
+            if success:
+                return ExecutionResult(True, f"Клик по шаблону {template_name}")
+            else:
+                return ExecutionResult(False, f"Шаблон {template_name} не найден на экране")
         except Exception as e:
             return ExecutionResult(False, f"Ошибка клика по шаблону: {e}")
     
@@ -248,37 +255,62 @@ class AtlasExecutor:
     def _execute_selenium_init(self, command: AtlasCommand) -> ExecutionResult:
         """Инициализация Selenium"""
         try:
-            # TODO: Реализовать Selenium драйвер
+            if not self.selenium_engine:
+                from engines.selenium.selenium_engine import SeleniumEngine
+                self.selenium_engine = SeleniumEngine()
+            
             url = command.target
-            self.logger.warning(f"⚠️ Selenium не реализован, пропускаем открытие {url}")
-            return ExecutionResult(True, f"Selenium инициализирован для {url} (заглушка)")
+            success = self.selenium_engine.init_browser(url)
+            
+            if success:
+                return ExecutionResult(True, f"Selenium браузер открыт: {url}")
+            else:
+                return ExecutionResult(False, f"Не удалось открыть браузер для {url}")
         except Exception as e:
             return ExecutionResult(False, f"Ошибка инициализации Selenium: {e}")
     
     def _execute_selenium_click(self, command: AtlasCommand) -> ExecutionResult:
         """Selenium клик"""
         try:
+            if not self.selenium_engine:
+                return ExecutionResult(False, "Selenium не инициализирован")
+            
             selector = command.target
-            self.logger.warning(f"⚠️ Selenium клик по {selector} пропущен (не реализован)")
-            return ExecutionResult(True, f"Selenium клик по {selector} (заглушка)")
+            success = self.selenium_engine.click_element(selector)
+            
+            if success:
+                return ExecutionResult(True, f"Selenium клик по {selector}")
+            else:
+                return ExecutionResult(False, f"Не удалось кликнуть по {selector}")
         except Exception as e:
             return ExecutionResult(False, f"Ошибка Selenium клика: {e}")
     
     def _execute_selenium_type(self, command: AtlasCommand) -> ExecutionResult:
         """Selenium ввод текста"""
         try:
+            if not self.selenium_engine:
+                return ExecutionResult(False, "Selenium не инициализирован")
+            
             selector = command.target
             text = self._substitute_variables(command.value)
-            self.logger.warning(f"⚠️ Selenium ввод в {selector} пропущен (не реализован)")
-            return ExecutionResult(True, f"Selenium ввод в {selector}: {text} (заглушка)")
+            success = self.selenium_engine.type_text(selector, text)
+            
+            if success:
+                return ExecutionResult(True, f"Selenium ввод в {selector}: {text}")
+            else:
+                return ExecutionResult(False, f"Не удалось ввести текст в {selector}")
         except Exception as e:
             return ExecutionResult(False, f"Ошибка Selenium ввода: {e}")
     
     def _execute_selenium_close(self, command: AtlasCommand) -> ExecutionResult:
         """Закрытие Selenium"""
         try:
-            self.logger.warning("⚠️ Selenium закрытие пропущено (не реализован)")
-            return ExecutionResult(True, "Selenium закрыт (заглушка)")
+            if self.selenium_engine:
+                self.selenium_engine.close_browser()
+                self.selenium_engine = None
+                return ExecutionResult(True, "Selenium браузер закрыт")
+            else:
+                return ExecutionResult(True, "Selenium уже закрыт")
         except Exception as e:
             return ExecutionResult(False, f"Ошибка закрытия Selenium: {e}")
     
