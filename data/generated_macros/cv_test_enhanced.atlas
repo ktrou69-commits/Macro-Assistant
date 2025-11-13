@@ -1,0 +1,21 @@
+# CV Test Macro
+# Description: Тест улучшенного Computer Vision
+# Created: 2025-11-13T17:10:00
+
+# Открываем Chrome
+open ChromeApp
+wait 3s
+
+# Тестируем клик по новой вкладке (Computer Vision)
+click ChromeNewTab
+wait 2s
+
+# Тестируем клик по поле поиска
+click ChromeSearchField
+wait 1s
+
+# Вводим тест
+type "CV Test Success!"
+wait 1s
+
+# Готово

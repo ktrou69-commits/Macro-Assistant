@@ -1,0 +1,9 @@
+# Generated Macro
+# Description: тест автообновления
+
+# Клик по полю поиска в Chrome
+click ChromeSearchField
+# Ввод поискового запроса
+type "тест автообновления"
+# Нажатие Enter для выполнения поиска
+press enter

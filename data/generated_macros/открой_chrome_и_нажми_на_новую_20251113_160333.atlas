@@ -1,0 +1,6 @@
+# Generated Macro
+# Description: открой Chrome и нажми на новую вкладку
+# Generated: 2025-11-13T16:03:33.275403
+
+open ChromeApp
+wait 2s

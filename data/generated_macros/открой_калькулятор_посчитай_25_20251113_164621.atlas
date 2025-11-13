@@ -1,0 +1,13 @@
+# Generated Macro
+# Description: открой калькулятор, посчитай 25 плюс 17, потом умножь на 2
+# Generated: 2025-11-13T16:46:21.740686
+
+open Calculator
+wait 2s
+type "25"
+wait 0.5s
+press +
+wait 0.5s
+type "17"
+wait 0.5s
+press enter

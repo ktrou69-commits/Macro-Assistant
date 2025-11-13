@@ -1,0 +1,24 @@
+# Fixed TikTok Macro
+# Description: Исправленный макрос для TikTok - правильная последовательность
+# Created: 2025-11-13T16:23:00
+
+# 1. Открываем Chrome
+open ChromeApp
+wait 3s
+
+# 2. Создаем новую вкладку
+click ChromeNewTab
+wait 2s
+
+# 3. Кликаем в адресную строку
+click ChromeSearchField
+wait 1s
+
+# 4. Вводим ТОЛЬКО адрес сайта
+type "tiktok.com"
+
+# 5. Переходим на сайт
+press enter
+wait 5s
+
+# Готово - должен открыться TikTok

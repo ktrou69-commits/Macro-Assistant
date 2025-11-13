@@ -1,0 +1,6 @@
+# Generated Macro
+# Description: открой гугл хром
+# Generated: 2025-11-13T15:07:53.677615
+
+open ChromeApp
+wait 2s

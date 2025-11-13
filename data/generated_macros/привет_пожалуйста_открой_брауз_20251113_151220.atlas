@@ -1,0 +1,16 @@
+# Generated Macro
+# Description: привет пожалуйста открой браузер Chrome и найди на YouTube видео про изучение Python программирования для начинающих разработчиков
+# Generated: 2025-11-13T15:12:20.625781
+
+open ChromeApp
+wait 2s
+click ChromeSearchField
+wait 1s
+type "youtube видео про изучение python программирования"
+press enter
+wait 3s
+click ChromeSearchField
+wait 1s
+type "youtube.com"
+press enter
+wait 5s

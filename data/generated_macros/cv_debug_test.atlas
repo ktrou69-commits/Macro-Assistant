@@ -1,0 +1,26 @@
+# CV Debug Test Macro
+# Description: Тест Computer Vision - проверка шаблонов Chrome
+# Created: 2025-11-13T16:20:00
+
+# Открываем Chrome
+open ChromeApp
+wait 3s
+
+# Тестируем каждый шаблон по очереди
+click ChromeNewTab
+wait 2s
+
+click ChromeSearchField  
+wait 2s
+
+# Вводим простой текст для проверки
+type "test"
+wait 1s
+
+# Очищаем поле
+hotkey cmd+a
+wait 0.5s
+press backspace
+wait 1s
+
+# Готово - проверяем что все работает

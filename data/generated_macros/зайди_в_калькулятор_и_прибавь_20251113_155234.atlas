@@ -1,0 +1,13 @@
+# Generated Macro
+# Description: зайди в калькулятор и прибавь 35 + 67
+# Generated: 2025-11-13T15:52:34.868281
+
+open Calculator
+wait 2s
+type "35"
+wait 0.5s
+press +
+wait 0.5s
+type "67"
+wait 0.5s
+press enter

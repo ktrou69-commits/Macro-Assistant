@@ -1,0 +1,18 @@
+# Simple Test Macro
+# Description: Простой тест - открытие калькулятора
+# Created: 2025-11-13T16:15:00
+
+# Открываем калькулятор
+open Calculator
+wait 2s
+
+# Простое вычисление
+type "5"
+wait 0.5s
+press +
+wait 0.5s
+type "3"
+wait 0.5s
+press enter
+
+# Готово!

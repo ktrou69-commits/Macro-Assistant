@@ -1,0 +1,13 @@
+# Generated Macro
+# Description: открой ютуб
+
+# Открываем приложение Google Chrome
+open ChromeApp
+# Ожидаем некоторое время, чтобы Chrome успел запуститься и прогрузить окно
+wait 3s
+# Кликаем по полю поиска/адресной строки в Chrome
+click ChromeSearchField
+# Вводим адрес YouTube
+type "youtube.com"
+# Нажимаем Enter для перехода по адресу
+press enter

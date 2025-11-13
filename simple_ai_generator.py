@@ -11,6 +11,14 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any
 
+# AI интеграция
+try:
+    from dotenv import load_dotenv
+    from google import genai
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+
 class SimpleAIGenerator:
     """
     Простой AI генератор .atlas макросов
@@ -31,6 +39,14 @@ class SimpleAIGenerator:
         # Загружаем DSL справочник
         self._load_dsl_reference()
         
+        # Автообновление справочника если нужно
+        self._auto_update_reference()
+        
+        # Инициализация AI
+        self.ai_client = None
+        self.ai_model = None
+        self._init_ai()
+        
         print("🤖 SimpleAIGenerator инициализирован")
     
     def _load_dsl_reference(self):
@@ -46,6 +62,78 @@ class SimpleAIGenerator:
         else:
             print(f"⚠️ DSL справочник не найден: {self.dsl_reference_path}")
             self.dsl_reference = self._get_fallback_reference()
+    
+    def _auto_update_reference(self):
+        """Автоматическое обновление DSL справочника из templates"""
+        try:
+            from pathlib import Path
+            import subprocess
+            import os
+            
+            templates_path = Path("templates")
+            if not templates_path.exists():
+                print("⚠️ Папка templates не найдена, пропускаем автообновление")
+                return
+            
+            # Проверяем есть ли новые файлы в templates
+            reference_time = 0
+            if self.dsl_reference_path.exists():
+                reference_time = self.dsl_reference_path.stat().st_mtime
+            
+            # Находим самый новый файл в templates
+            newest_template_time = 0
+            for template_file in templates_path.rglob("*"):
+                if template_file.is_file():
+                    file_time = template_file.stat().st_mtime
+                    if file_time > newest_template_time:
+                        newest_template_time = file_time
+            
+            # Если templates новее справочника - обновляем
+            if newest_template_time > reference_time:
+                print("🔄 Обнаружены новые шаблоны, обновляем DSL справочник...")
+                
+                # Запускаем генератор
+                result = subprocess.run([
+                    "python3", "dsl_reference_generator.py", 
+                    "--output", str(self.dsl_reference_path)
+                ], capture_output=True, text=True, cwd=Path.cwd())
+                
+                if result.returncode == 0:
+                    print("✅ DSL справочник автоматически обновлен")
+                    # Перезагружаем справочник
+                    self._load_dsl_reference()
+                else:
+                    print(f"❌ Ошибка автообновления: {result.stderr}")
+            else:
+                print("✅ DSL справочник актуален")
+                
+        except Exception as e:
+            print(f"⚠️ Ошибка автообновления DSL справочника: {e}")
+    
+    def _init_ai(self):
+        """Инициализация AI клиента"""
+        if not AI_AVAILABLE:
+            print("⚠️ AI библиотеки не установлены. Используется keyword-based генерация")
+            return
+        
+        try:
+            # Загружаем переменные окружения
+            load_dotenv()
+            
+            api_key = os.getenv('GEMINI_API_KEY')
+            if not api_key:
+                print("⚠️ GEMINI_API_KEY не найден в .env файле")
+                return
+            
+            # Инициализируем клиент
+            self.ai_client = genai.Client(api_key=api_key)
+            self.ai_model = os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')
+            
+            print(f"✅ Gemini AI инициализирован: {self.ai_model}")
+            
+        except Exception as e:
+            print(f"❌ Ошибка инициализации AI: {e}")
+            self.ai_client = None
     
     def _get_fallback_reference(self) -> str:
         """Базовый DSL справочник если файл не найден"""
@@ -66,7 +154,7 @@ DSL КОМАНДЫ:
 - Chrome-TikTok-Like - кнопка лайка TikTok
 """
     
-    def generate_macro(self, user_request: str, use_ai: bool = False) -> Dict[str, Any]:
+    def generate_macro(self, user_request: str, use_ai: Optional[bool] = None) -> Dict[str, Any]:
         """
         Генерация .atlas макроса
         
@@ -82,8 +170,12 @@ DSL КОМАНДЫ:
         start_time = datetime.now()
         
         try:
-            if use_ai:
-                # TODO: Интеграция с реальным AI API
+            # Автоматически определяем использование AI
+            if use_ai is None:
+                use_ai = self.ai_client is not None
+            
+            if use_ai and self.ai_client:
+                # Используем реальный Gemini AI
                 atlas_code = self._generate_with_ai_api(user_request)
             else:
                 # Простая логика на основе ключевых слов
@@ -101,7 +193,7 @@ DSL КОМАНДЫ:
             
             execution_time = (datetime.now() - start_time).total_seconds()
             
-            return {
+            result = {
                 "success": True,
                 "atlas_code": atlas_code,
                 "file_path": str(file_path),
@@ -109,6 +201,13 @@ DSL КОМАНДЫ:
                 "user_request": user_request,
                 "method": "ai_api" if use_ai else "keywords"
             }
+            
+            # Предлагаем сохранить как переменную
+            if self._should_offer_variable_save(atlas_code, user_request):
+                result["offer_variable_save"] = True
+                result["suggested_variable_name"] = self._suggest_variable_name(user_request)
+            
+            return result
         
         except Exception as e:
             return {
@@ -143,8 +242,23 @@ DSL КОМАНДЫ:
             atlas_lines.append("click ChromeNewTab")
             atlas_lines.append("wait 1s")
         
-        # 3. Поиск
-        if any(word in request_lower for word in ['поиск', 'search', 'найди', 'find']):
+        # 3. Прямой переход на сайт (tiktok.com, youtube.com, etc)
+        if any(site in request_lower for site in ['tiktok.com', 'youtube.com', 'google.com', '.com', '.ru']):
+            atlas_lines.append("click ChromeSearchField")
+            atlas_lines.append("wait 1s")
+            
+            # Извлекаем URL
+            url = self._extract_url(user_request)
+            if url:
+                atlas_lines.append(f'type "{url}"')
+            else:
+                atlas_lines.append('type "google.com"')
+            
+            atlas_lines.append("press enter")
+            atlas_lines.append("wait 5s")
+        
+        # 4. Поиск (только если нет прямого URL)
+        elif any(word in request_lower for word in ['поиск', 'search', 'найди', 'find']):
             atlas_lines.append("click ChromeSearchField")
             atlas_lines.append("wait 1s")
             
@@ -290,44 +404,179 @@ DSL КОМАНДЫ:
         
         return default
     
+    def _extract_url(self, text: str) -> str:
+        """Извлекает URL из текста"""
+        import re
+        
+        # Ищем явные URL
+        url_patterns = [
+            r'(tiktok\.com)',
+            r'(youtube\.com)', 
+            r'(google\.com)',
+            r'(github\.com)',
+            r'(\w+\.com)',
+            r'(\w+\.ru)',
+        ]
+        
+        for pattern in url_patterns:
+            match = re.search(pattern, text.lower())
+            if match:
+                return match.group(1)
+        
+        return ""
+    
+    def _should_offer_variable_save(self, atlas_code: str, user_request: str) -> bool:
+        """Определяет стоит ли предложить сохранить макрос как переменную"""
+        # Предлагаем сохранить если:
+        # 1. Макрос содержит более 3 команд
+        # 2. Есть циклы или сложная логика
+        # 3. Запрос содержит ключевые слова для повторного использования
+        
+        lines = [line.strip() for line in atlas_code.split('\n') if line.strip() and not line.strip().startswith('#')]
+        
+        # Более 3 команд
+        if len(lines) > 3:
+            return True
+        
+        # Есть циклы
+        if any('repeat' in line for line in lines):
+            return True
+        
+        # Ключевые слова для повторного использования
+        reuse_keywords = ['часто', 'обычно', 'всегда', 'каждый раз', 'постоянно', 'регулярно']
+        if any(keyword in user_request.lower() for keyword in reuse_keywords):
+            return True
+        
+        return False
+    
+    def _suggest_variable_name(self, user_request: str) -> str:
+        """Предлагает имя для переменной на основе запроса"""
+        # Извлекаем ключевые слова
+        words = re.findall(r'\b[а-яё]+\b|\b[a-z]+\b', user_request.lower())
+        
+        # Фильтруем служебные слова
+        stop_words = {'и', 'в', 'на', 'с', 'по', 'для', 'от', 'до', 'из', 'к', 'о', 'у', 'за', 'под', 'над', 'при', 'через', 'между'}
+        meaningful_words = [word for word in words if word not in stop_words and len(word) > 2]
+        
+        # Берем первые 2-3 слова и делаем CamelCase
+        if meaningful_words:
+            selected_words = meaningful_words[:3]
+            return ''.join(word.capitalize() for word in selected_words)
+        
+        return "CustomMacro"
+    
+    def save_as_variable(self, atlas_code: str, user_request: str, variable_name: str = None):
+        """Сохраняет макрос как переменную"""
+        try:
+            from utils.variable_creator import VariableCreator
+            
+            creator = VariableCreator()
+            
+            if not variable_name:
+                variable_name = self._suggest_variable_name(user_request)
+            
+            # Очищаем код
+            cleaned_code = self._clean_atlas_for_variable(atlas_code)
+            
+            # Сохраняем переменную
+            creator._save_variable(variable_name, user_request, cleaned_code)
+            creator._update_dsl_reference()
+            
+            print(f"✅ Макрос сохранен как переменная ${{{variable_name}}}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Ошибка сохранения переменной: {e}")
+            return False
+    
+    def _clean_atlas_for_variable(self, atlas_code: str) -> str:
+        """Очищает .atlas код для сохранения как переменная"""
+        lines = atlas_code.split('\n')
+        cleaned_lines = []
+        
+        for line in lines:
+            line_stripped = line.strip()
+            # Пропускаем метаданные
+            if (line_stripped.startswith("# Generated") or 
+                line_stripped.startswith("# Created") or
+                line_stripped.startswith("# Description:")):
+                continue
+            cleaned_lines.append(line)
+        
+        return '\n'.join(cleaned_lines).strip()
+    
     def _generate_with_ai_api(self, user_request: str) -> str:
         """
-        Генерация с помощью AI API (заглушка)
-        
-        TODO: Интегрировать с OpenAI/Gemini/Anthropic
+        Генерация с помощью Gemini AI API
         """
-        print("🤖 AI API генерация (заглушка)")
+        print("🤖 Gemini AI генерация...")
         
-        # Формируем промпт
-        prompt = f"""
-Ты - эксперт по созданию .atlas макросов для автоматизации.
+        try:
+            # Формируем промпт
+            prompt = f"""Ты - эксперт по созданию .atlas макросов для автоматизации macOS.
 
 DSL СПРАВОЧНИК:
-{self.dsl_reference[:2000]}...
+{self.dsl_reference}
 
 ЗАДАЧА: Создай .atlas макрос для запроса: "{user_request}"
 
 ТРЕБОВАНИЯ:
-1. Используй только команды из DSL справочника
-2. Используй только существующие шаблоны из справочника  
+1. Используй ТОЛЬКО команды из DSL справочника выше
+2. Используй ТОЛЬКО существующие шаблоны из справочника
 3. Добавь комментарии для понимания
 4. Макрос должен быть логичным и выполнимым
+5. НЕ используй несуществующие команды или шаблоны
+
+ВАЖНО: Отвечай ТОЛЬКО кодом .atlas без дополнительных объяснений!
 
 ФОРМАТ ОТВЕТА:
-```atlas
 # Generated Macro
 # Description: {user_request}
 
-[ваш код здесь]
-```
-"""
-        
-        # TODO: Вызов AI API
-        # response = openai.chat.completions.create(...)
-        # return extract_atlas_code(response)
-        
-        # Пока возвращаем результат keyword генерации
-        return self._generate_with_keywords(user_request)
+[твой .atlas код здесь]"""
+
+            # Вызов Gemini API
+            response = self.ai_client.models.generate_content(
+                model=self.ai_model,
+                contents=prompt
+            )
+            
+            if response and response.text:
+                atlas_code = self._extract_atlas_code(response.text)
+                print(f"✅ AI сгенерировал {len(atlas_code.split())} строк кода")
+                return atlas_code
+            else:
+                print("⚠️ AI не вернул результат, используем keyword генерацию")
+                return self._generate_with_keywords(user_request)
+                
+        except Exception as e:
+            print(f"❌ Ошибка AI генерации: {e}")
+            print("🔄 Переключаемся на keyword генерацию")
+            return self._generate_with_keywords(user_request)
+    
+    def _extract_atlas_code(self, ai_response: str) -> str:
+        """Извлечение .atlas кода из ответа AI"""
+        try:
+            # Убираем markdown блоки если есть
+            if '```atlas' in ai_response:
+                # Извлекаем код между ```atlas и ```
+                start = ai_response.find('```atlas') + 8
+                end = ai_response.find('```', start)
+                if end != -1:
+                    return ai_response[start:end].strip()
+            elif '```' in ai_response:
+                # Извлекаем код между ``` и ```
+                start = ai_response.find('```') + 3
+                end = ai_response.find('```', start)
+                if end != -1:
+                    return ai_response[start:end].strip()
+            
+            # Если нет markdown блоков, возвращаем весь ответ
+            return ai_response.strip()
+            
+        except Exception as e:
+            print(f"⚠️ Ошибка извлечения кода: {e}")
+            return ai_response.strip()
     
     def _save_macro(self, atlas_code: str, user_request: str) -> Path:
         """Сохранение макроса в файл"""

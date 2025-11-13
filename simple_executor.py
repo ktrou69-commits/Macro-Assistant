@@ -283,30 +283,32 @@ class SimpleExecutor:
             return ExecutionResult(False, f"Ошибка клика по координатам: {e}")
     
     def _click_template(self, template_name: str) -> ExecutionResult:
-        """Клик по шаблону через Computer Vision"""
+        """Клик по шаблону через улучшенный Computer Vision"""
         try:
-            # Ищем шаблон
+            # Ищем шаблон с повторными попытками (как в macro_sequence.py)
             template_path = self._find_template(template_name)
             
             if not template_path:
                 print(f"⚠️ Шаблон не найден: {template_name}")
                 return ExecutionResult(False, f"Шаблон не найден: {template_name}")
             
-            # Используем OpenCV для поиска
-            location = self._find_template_on_screen(template_path)
+            # Используем улучшенный поиск с повторными попытками
+            found, coords, score = self._find_template_with_retry(template_path)
             
-            if location:
-                x, y = location
+            if found:
+                x, y = coords
                 self._lazy_import_pyautogui()
                 self.pyautogui.click(x, y)
+                print(f"✅ Шаблон найден с уверенностью {score:.3f}")
                 print(f"🖱️ Клик по шаблону {template_name} в ({x}, {y})")
                 return ExecutionResult(True, f"Клик по шаблону {template_name}")
             else:
+                print(f"⚠️ Низкая уверенность поиска: {score:.3f}")
                 print(f"⚠️ Шаблон не найден на экране: {template_name}")
                 return ExecutionResult(False, f"Шаблон не найден на экране: {template_name}")
         
         except Exception as e:
-            return ExecutionResult(False, f"Ошибка клика по шаблону: {e}")
+            return ExecutionResult(False, f"Ошибка поиска шаблона: {e}")
     
     def _find_template(self, template_name: str) -> Optional[Path]:
         """Поиск файла шаблона"""
@@ -437,20 +439,141 @@ class SimpleExecutor:
             if direction in ['up', 'down']:
                 scroll_amount = amount if direction == 'down' else -amount
                 self.pyautogui.scroll(scroll_amount)
-            elif direction in ['left', 'right']:
-                # Горизонтальная прокрутка (не все системы поддерживают)
-                self.pyautogui.hscroll(amount if direction == 'right' else -amount)
-            
-            print(f"📜 Прокрутка: {direction} {amount}")
-            return ExecutionResult(True, f"Прокрутка: {direction} {amount}")
         
-        except Exception as e:
-            return ExecutionResult(False, f"Ошибка прокрутки: {e}")
+        # Конвертируем в OpenCV формат
+        import numpy as np
+        frame = np.array(screenshot)
+        frame = self.cv2.cvtColor(frame, self.cv2.COLOR_RGB2BGR)
+        gray = self.cv2.cvtColor(frame, self.cv2.COLOR_BGR2GRAY)
+        
+        # Template matching
+        res = self.cv2.matchTemplate(gray, template, self.cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = self.cv2.minMaxLoc(res)
+        
+        if max_val >= threshold:
+            h, w = template.shape
+            
+            # Вычисляем центр
+            center_x = max_loc[0] + w // 2
+            center_y = max_loc[1] + h // 2
+            
+            # Определяем масштаб дисплея (Retina)
+            display_scale = self._get_display_scale()
+            
+            # Корректируем координаты для pyautogui.click()
+            center_x = int(center_x / display_scale)
+            center_y = int(center_y / display_scale)
+            
+            return True, (center_x, center_y), max_val
+        
+        return False, None, max_val
     
-    def _substitute_variables(self, text: str) -> str:
-        """Подстановка переменных в тексте"""
-        # TODO: Реализовать подстановку переменных ${name}
-        return text
+    except Exception as e:
+        print(f"❌ Ошибка продвинутого поиска: {e}")
+        return False, None, 0.0
+
+def _get_display_scale(self):
+    """Определение масштаба дисплея (Retina)"""
+    try:
+        self._lazy_import_pyautogui()
+        
+        screen_size = self.pyautogui.size()
+        screenshot = self.pyautogui.screenshot()
+        
+        # Если физическое разрешение больше логического - это Retina
+        if screenshot.width != screen_size.width:
+            scale = screenshot.width / screen_size.width
+            return scale
+        
+        return 1.0
+    except:
+        return 1.0
+
+def _execute_type(self, text: str) -> ExecutionResult:
+    """Ввод текста"""
+    try:
+        self._lazy_import_pyautogui()
+        
+        # Подстановка переменных
+        text = self._substitute_variables(text)
+        
+        self.pyautogui.typewrite(text)
+        print(f"⌨️ Введен текст: {text}")
+        return ExecutionResult(True, f"Введен текст: {text}")
+        
+    except Exception as e:
+        return ExecutionResult(False, f"Ошибка ввода текста: {e}")
+
+def _execute_wait(self, duration: str) -> ExecutionResult:
+    """Ожидание"""
+    try:
+        # Парсим длительность
+        if duration.endswith('s'):
+            seconds = float(duration[:-1])
+        elif duration.endswith('ms'):
+            seconds = float(duration[:-2]) / 1000
+        else:
+            seconds = float(duration)
+        
+        print(f"⏳ Ожидание {seconds}с...")
+        time.sleep(seconds)
+        return ExecutionResult(True, f"Ожидание {seconds}с")
+        
+    except Exception as e:
+        return ExecutionResult(False, f"Ошибка ожидания: {e}")
+
+def _execute_press(self, key: str) -> ExecutionResult:
+    """Нажатие клавиши"""
+    try:
+        self._lazy_import_pyautogui()
+        
+        self.pyautogui.press(key)
+        print(f"⌨️ Нажата клавиша: {key}")
+        return ExecutionResult(True, f"Нажата клавиша: {key}")
+        
+    except Exception as e:
+        return ExecutionResult(False, f"Ошибка нажатия клавиши: {e}")
+
+def _execute_hotkey(self, hotkey: str) -> ExecutionResult:
+    """Горячие клавиши"""
+    try:
+        self._lazy_import_pyautogui()
+        
+        keys = hotkey.split('+')
+        self.pyautogui.hotkey(*keys)
+        print(f"⌨️ Горячие клавиши: {hotkey}")
+        return ExecutionResult(True, f"Горячие клавиши: {hotkey}")
+        
+    except Exception as e:
+        return ExecutionResult(False, f"Ошибка горячих клавиш: {e}")
+
+def _execute_scroll(self, scroll_params: str) -> ExecutionResult:
+    """Прокрутка"""
+    try:
+        self._lazy_import_pyautogui()
+        
+        parts = scroll_params.split()
+        direction = parts[0] if parts else 'down'
+        amount = int(parts[1]) if len(parts) > 1 else 3
+        
+        if direction in ['up', 'down']:
+            scroll_amount = amount if direction == 'down' else -amount
+            self.pyautogui.scroll(scroll_amount)
+        elif direction in ['left', 'right']:
+            # Горизонтальная прокрутка (не все системы поддерживают)
+            self.pyautogui.hscroll(amount if direction == 'right' else -amount)
+        
+        print(f"📜 Прокрутка: {direction} {amount}")
+        return ExecutionResult(True, f"Прокрутка {direction}")
+        
+    except Exception as e:
+        return ExecutionResult(False, f"Ошибка прокрутки: {e}")
+
+def _substitute_variables(self, text: str) -> str:
+    """Подстановка переменных в тексте"""
+    # Простая подстановка переменных ${var}
+    # В будущем можно расширить
+    return text
 
 # Пример использования
 if __name__ == "__main__":

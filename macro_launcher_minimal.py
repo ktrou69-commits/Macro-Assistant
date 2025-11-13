@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+"""
+macro_launcher_minimal.py
+Минимальный лаунчер макросов без зависимостей от AI генератора
+Использует только SimpleExecutor для выполнения
+"""
+
+import os
+import sys
+from pathlib import Path
+from datetime import datetime
+
+# Минимальный исполнитель (встроенный)
+class MinimalExecutor:
+    """Минимальный исполнитель .atlas файлов"""
+    
+    def execute_atlas_file(self, file_path: str):
+        """Выполнение .atlas файла через subprocess"""
+        try:
+            import subprocess
+            
+            print(f"🚀 Выполнение макроса: {Path(file_path).name}")
+            
+            # Запускаем через main.py
+            result = subprocess.run([
+                "python3", "main.py", "--execute", file_path
+            ], capture_output=True, text=True, timeout=120)
+            
+            # Создаем объект результата
+            class ExecutionResult:
+                def __init__(self, success, message, execution_time=0.0):
+                    self.success = success
+                    self.message = message
+                    self.execution_time = execution_time
+            
+            if result.returncode == 0:
+                return ExecutionResult(True, "Макрос выполнен успешно", 0.0)
+            else:
+                error_msg = result.stderr if result.stderr else "Неизвестная ошибка"
+                return ExecutionResult(False, error_msg, 0.0)
+                
+        except subprocess.TimeoutExpired:
+            return ExecutionResult(False, "Превышено время ожидания (120с)", 0.0)
+        except Exception as e:
+            return ExecutionResult(False, f"Ошибка выполнения: {e}", 0.0)
+
+
+class MacroLauncherMinimal:
+    """Минимальный лаунчер макросов"""
+    
+    def __init__(self):
+        self.macros_dir = Path("data/generated_macros")
+        self.executor = MinimalExecutor()
+        
+    def scan_macros(self):
+        """Сканирует папку с макросами"""
+        if not self.macros_dir.exists():
+            print(f"❌ Папка с макросами не найдена: {self.macros_dir}")
+            return []
+        
+        # Находим все .atlas файлы
+        atlas_files = list(self.macros_dir.glob("*.atlas"))
+        
+        if not atlas_files:
+            print(f"❌ Макросы не найдены в: {self.macros_dir}")
+            return []
+        
+        # Сортируем по времени изменения (новые сверху)
+        atlas_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+        
+        return atlas_files
+    
+    def display_macros(self, macros):
+        """Отображает список макросов"""
+        print("\n" + "=" * 80)
+        print("🚀 МИНИМАЛЬНЫЙ ЛАУНЧЕР МАКРОСОВ")
+        print("=" * 80)
+        
+        for i, macro_file in enumerate(macros, 1):
+            # Читаем описание из файла
+            description = self.get_macro_description(macro_file)
+            
+            # Время создания
+            mtime = macro_file.stat().st_mtime
+            time_str = datetime.fromtimestamp(mtime).strftime("%d.%m.%Y %H:%M")
+            
+            # Размер файла
+            size = macro_file.stat().st_size
+            
+            print(f"{i:2d}. 📄 {macro_file.stem}")
+            print(f"    📝 {description}")
+            print(f"    🕐 {time_str} | 📊 {size} байт")
+            print()
+    
+    def get_macro_description(self, macro_file):
+        """Извлекает описание из макроса"""
+        try:
+            with open(macro_file, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            
+            # Ищем строку с Description
+            for line in lines:
+                if line.startswith("# Description:"):
+                    return line.replace("# Description:", "").strip()
+            
+            # Если нет описания, возвращаем имя файла
+            return macro_file.stem.replace("_", " ")
+            
+        except Exception as e:
+            return f"Ошибка чтения: {e}"
+    
+    def preview_macro(self, macro_file):
+        """Показывает превью макроса"""
+        try:
+            with open(macro_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            print("\n" + "=" * 60)
+            print(f"📋 ПРЕВЬЮ: {macro_file.name}")
+            print("=" * 60)
+            
+            lines = content.split('\n')
+            for i, line in enumerate(lines[:15], 1):  # Показываем первые 15 строк
+                print(f"{i:2d}: {line}")
+            
+            if len(lines) > 15:
+                print(f"... и еще {len(lines) - 15} строк")
+            
+            print("=" * 60)
+            
+        except Exception as e:
+            print(f"❌ Ошибка чтения файла: {e}")
+    
+    def execute_macro(self, macro_file):
+        """Выполняет выбранный макрос"""
+        print(f"\n🚀 Запуск макроса: {macro_file.name}")
+        print("=" * 60)
+        
+        try:
+            # Используем минимальный исполнитель
+            result = self.executor.execute_atlas_file(str(macro_file))
+            
+            if result.success:
+                print(f"\n✅ Макрос выполнен успешно!")
+                print(f"📋 Результат: {result.message}")
+            else:
+                print(f"\n❌ Ошибка выполнения: {result.message}")
+                
+        except Exception as e:
+            print(f"❌ Критическая ошибка: {e}")
+    
+    def run(self):
+        """Главный цикл приложения"""
+        print("🚀 Minimal Macro Launcher")
+        print("Минимальный лаунчер макросов (без зависимостей от AI)")
+        
+        while True:
+            # Сканируем макросы
+            macros = self.scan_macros()
+            if not macros:
+                input("\nНажмите Enter для выхода...")
+                break
+            
+            # Отображаем список
+            self.display_macros(macros)
+            
+            # Меню
+            print("КОМАНДЫ:")
+            print("  1-N  - Выбрать макрос по номеру")
+            print("  p N  - Превью макроса (например: p 1)")
+            print("  r    - Обновить список")
+            print("  q    - Выход")
+            
+            # Получаем ввод пользователя
+            try:
+                choice = input("\n👉 Ваш выбор: ").strip().lower()
+                
+                if choice == 'q':
+                    print("👋 До свидания!")
+                    break
+                elif choice == 'r':
+                    print("🔄 Обновление списка...")
+                    continue
+                elif choice.startswith('p '):
+                    # Превью макроса
+                    try:
+                        num = int(choice.split()[1])
+                        if 1 <= num <= len(macros):
+                            self.preview_macro(macros[num - 1])
+                        else:
+                            print("❌ Неверный номер макроса")
+                    except (IndexError, ValueError):
+                        print("❌ Неверный формат команды. Используйте: p N")
+                else:
+                    # Выполнение макроса
+                    try:
+                        num = int(choice)
+                        if 1 <= num <= len(macros):
+                            selected_macro = macros[num - 1]
+                            
+                            # Подтверждение
+                            confirm = input(f"🤔 Запустить '{selected_macro.stem}'? (y/n): ").strip().lower()
+                            if confirm in ['y', 'yes', 'да', 'д']:
+                                self.execute_macro(selected_macro)
+                            else:
+                                print("❌ Отменено")
+                        else:
+                            print("❌ Неверный номер макроса")
+                    except ValueError:
+                        print("❌ Неверный ввод. Введите номер макроса или команду")
+                
+                # Пауза перед следующей итерацией
+                input("\nНажмите Enter для продолжения...")
+                print("\n" * 2)  # Очищаем экран
+                
+            except KeyboardInterrupt:
+                print("\n\n👋 Выход по Ctrl+C")
+                break
+            except Exception as e:
+                print(f"❌ Ошибка: {e}")
+
+
+def main():
+    """Главная функция"""
+    launcher = MacroLauncherMinimal()
+    launcher.run()
+
+
+if __name__ == "__main__":
+    main()

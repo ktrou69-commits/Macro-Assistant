@@ -195,6 +195,28 @@ class DSLReferenceGenerator:
         
         return dom_map
     
+    def _load_system_commands(self) -> str:
+        """Загружает системные команды из файла"""
+        system_file = Path("data/SYSTEM_COMMANDS.txt")
+        if system_file.exists():
+            try:
+                with open(system_file, 'r', encoding='utf-8') as f:
+                    return f.read()
+            except Exception as e:
+                print(f"⚠️ Ошибка загрузки системных команд: {e}")
+        return ""
+    
+    def _load_dsl_variables(self) -> str:
+        """Загружает DSL переменные из файла"""
+        variables_file = Path("data/dsl_variables.txt")
+        if variables_file.exists():
+            try:
+                with open(variables_file, 'r', encoding='utf-8') as f:
+                    return f.read()
+            except Exception as e:
+                print(f"⚠️ Ошибка загрузки DSL переменных: {e}")
+        return ""
+    
     def get_dsl_commands(self) -> Dict[str, str]:
         """
         Возвращает все доступные DSL команды с описанием
@@ -246,6 +268,10 @@ class DSLReferenceGenerator:
         if not templates_map:
             print("❌ Нет шаблонов для генерации справочника")
             return
+        
+        # Загружаем системные команды и переменные
+        system_commands = self._load_system_commands()
+        dsl_variables = self._load_dsl_variables()
         
         # Формируем содержимое
         content = []
@@ -391,9 +417,27 @@ class DSLReferenceGenerator:
         
         content.append("")
         
-        # Раздел 3: Все уникальные имена (алфавитный список)
+        # Раздел 3: Системные команды
+        if system_commands:
+            content.append("\n" + "=" * 80)
+            content.append("⚡ РАЗДЕЛ 3: СИСТЕМНЫЕ КОМАНДЫ")
+            content.append("=" * 80)
+            content.append("")
+            content.append(system_commands)
+            content.append("")
+        
+        # Раздел 4: DSL переменные
+        if dsl_variables:
+            content.append("\n" + "=" * 80)
+            content.append("🔧 РАЗДЕЛ 4: DSL ПЕРЕМЕННЫЕ")
+            content.append("=" * 80)
+            content.append("")
+            content.append(dsl_variables)
+            content.append("")
+        
+        # Раздел 5: Все уникальные имена (алфавитный список)
         content.append("\n" + "=" * 80)
-        content.append("🏷️  РАЗДЕЛ 3: ВСЕ ДОСТУПНЫЕ ИМЕНА (алфавитный порядок)")
+        content.append("🏷️  РАЗДЕЛ 5: ВСЕ ДОСТУПНЫЕ ИМЕНА (алфавитный порядок)")
         content.append("=" * 80)
         content.append("")
         

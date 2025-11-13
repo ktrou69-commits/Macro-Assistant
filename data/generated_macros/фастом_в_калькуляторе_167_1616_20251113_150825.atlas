@@ -1,0 +1,13 @@
+# Generated Macro
+# Description: фастом в калькуляторе 167-16+16
+# Generated: 2025-11-13T15:08:25.762280
+
+open Calculator
+wait 2s
+type "167"
+wait 0.5s
+press +
+wait 0.5s
+type "16"
+wait 0.5s
+press enter

@@ -1,0 +1,13 @@
+# Generated Macro
+# Description: открой калькулятор и посчитай 25 плюс 17
+# Generated: 2025-11-13T14:56:03.498594
+
+open Calculator
+wait 2s
+type "25"
+wait 0.5s
+press +
+wait 0.5s
+type "17"
+wait 0.5s
+press enter

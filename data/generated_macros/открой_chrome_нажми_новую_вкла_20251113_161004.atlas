@@ -1,0 +1,16 @@
+# Generated Macro
+# Description: открой Chrome, нажми новую вкладку, найди tiktok.com и перейди на сайт
+# Generated: 2025-11-13T16:10:04.750764
+
+open ChromeApp
+wait 2s
+click ChromeSearchField
+wait 1s
+type "tiktok.com и перейди на сайт"
+press enter
+wait 3s
+click ChromeSearchField
+wait 1s
+type "tiktok.com"
+press enter
+wait 5s

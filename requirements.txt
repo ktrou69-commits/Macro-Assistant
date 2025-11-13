@@ -11,5 +11,9 @@ pyautogui>=0.9.54
 selenium>=4.15.0
 webdriver-manager>=4.0.0
 
+# AI интеграция
+google-genai>=0.8.0
+python-dotenv>=1.0.0
+
 # Утилиты
 pathlib2>=2.3.7

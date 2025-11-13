@@ -51,6 +51,19 @@ class MacroAssistant:
         print(f"✅ Макрос сгенерирован: {gen_result['file_path']}")
         print(f"⚡ Время генерации: {gen_result['execution_time']:.3f}с")
         
+        # Предлагаем сохранить как переменную
+        if gen_result.get("offer_variable_save"):
+            suggested_name = gen_result.get("suggested_variable_name", "CustomMacro")
+            print(f"\n💾 Хотите сохранить этот макрос как переменную ${{{suggested_name}}} для повторного использования?")
+            save_choice = input("   Введите 'y' для сохранения или любую клавишу для пропуска: ").strip().lower()
+            
+            if save_choice in ['y', 'yes', 'да', 'д']:
+                custom_name = input(f"   Введите имя переменной (или Enter для '{suggested_name}'): ").strip()
+                final_name = custom_name if custom_name else suggested_name
+                
+                if self.generator.save_as_variable(gen_result["atlas_code"], gen_result["user_request"], final_name):
+                    print(f"🎉 Переменная ${{{final_name}}} сохранена! Теперь вы можете использовать её в других макросах.")
+        
         result = {
             "success": True,
             "generation": gen_result,

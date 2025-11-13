@@ -1,0 +1,26 @@
+# Manual TikTok Entry Macro
+# Description: Открытие Chrome, новая вкладка, переход на TikTok
+# Created: 2025-11-13T16:10:00
+# Uses: ChromeBasicGuiButtons templates
+
+# 1. Открываем Chrome приложение
+open ChromeApp
+wait 2s
+
+# 2. Открываем новую вкладку
+click ChromeNewTab
+wait 1s
+
+# 3. Кликаем в поле поиска
+click ChromeSearchField
+wait 1s
+
+# 4. Вводим адрес TikTok
+type "tiktok.com"
+press enter
+wait 5s
+
+# 5. Ждем загрузки страницы
+wait 3s
+
+# Макрос готов - TikTok должен открыться!
