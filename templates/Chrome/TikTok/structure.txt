@@ -1,0 +1,23 @@
+# TikTok DOM Selectors Structure
+# Автоматически извлеченные селекторы для TikTok
+
+# Chrome-TikTok-Like-dom
+#   Selector: [data-e2e="like-icon"]
+#   Type: span
+#   Confidence: 95%
+#   Method: DOM (быстро, надежно)
+#   Fallback: Chrome-TikTok-Like-btn.png (Vision)
+
+# Chrome-TikTok-Comment-dom
+#   Selector: [data-e2e="comment-icon"]
+#   Type: span
+#   Confidence: 95%
+#   Method: DOM (быстро, надежно)
+#   Fallback: Chrome-TikTok-Comment-btn.png (Vision)
+
+# Chrome-TikTok-SearchField-dom
+#   Selector: input[placeholder*="Search"]
+#   Type: input
+#   Confidence: 90%
+#   Method: DOM (быстро, надежно)
+#   Fallback: Chrome-TikTok-SearchField-btn.png (Vision)

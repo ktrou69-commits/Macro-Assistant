@@ -1,0 +1,5 @@
+# Test Integration
+# Description: Тест интеграции DSL Engine
+open Calculator
+wait 2s
+log "Интеграция работает!"

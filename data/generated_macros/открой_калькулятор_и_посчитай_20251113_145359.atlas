@@ -1,0 +1,13 @@
+# Generated Macro
+# Description: открой калькулятор и посчитай 10 плюс 5
+# Generated: 2025-11-13T14:53:59.696467
+
+open Calculator
+wait 2s
+type "10"
+wait 0.5s
+press +
+wait 0.5s
+type "5"
+wait 0.5s
+press enter

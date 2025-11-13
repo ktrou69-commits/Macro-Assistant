@@ -1,0 +1,139 @@
+[
+  {
+    "timestamp": "2025-11-13T12:59:22.528754",
+    "user_input": "открой калькулятор",
+    "module": "macro_generator",
+    "result": {
+      "success": false,
+      "error": "Модуль macro_generator не найден или не может быть загружен"
+    },
+    "execution_time": 0.01959825004450977,
+    "success": false,
+    "error": "Модуль macro_generator не найден или не может быть загружен"
+  },
+  {
+    "timestamp": "2025-11-13T13:00:12.385385",
+    "user_input": "обработай видео файл",
+    "module": "macro_generator",
+    "result": {
+      "success": false,
+      "error": "Модуль macro_generator не найден или не может быть загружен"
+    },
+    "execution_time": 0.002361249993555248,
+    "success": false,
+    "error": "Модуль macro_generator не найден или не может быть загружен"
+  },
+  {
+    "timestamp": "2025-11-13T13:00:25.712329",
+    "user_input": "video processor test",
+    "module": "video_processor",
+    "result": {
+      "success": true,
+      "result": "Обработан запрос в модуле video_processor",
+      "explanation": "Это демонстрационный ответ от шаблона модуля",
+      "suggestions": [
+        "Попробуйте более конкретный запрос",
+        "Используйте ключевые слова для лучшего понимания"
+      ],
+      "module": "video_processor",
+      "timestamp": "2025-11-13T13:00:25.712319",
+      "user_input": "video processor test"
+    },
+    "execution_time": 0.004495750064961612,
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2025-11-13T13:10:35.823280",
+    "user_input": "найди на YouTube видео про Python",
+    "module": "macro_generator",
+    "result": {
+      "success": true,
+      "result": "# Поиск видео на YouTube\nselenium_init url=\"https://www.youtube.com\"\nwait 3s\nselenium_type selector=\"input#search\" text=\"Python tutorials\"\nselenium_click selector=\"button#search-icon-legacy\"\nwait 5s",
+      "title": "Поиск Python видео на YouTube",
+      "description": "Открывает YouTube и ищет видео по запросу Python",
+      "category": "web_automation",
+      "estimated_time": "8-10 секунд",
+      "commands_count": 5,
+      "execution_time": 0.0001957416534423828,
+      "metadata": {
+        "platform": "macOS",
+        "requires_internet": true,
+        "complexity": "simple",
+        "automation_type": [
+          "dom"
+        ],
+        "module": "macro_generator",
+        "generation_time": 0.0001957416534423828,
+        "timestamp": "2025-11-13T13:10:35.823262"
+      }
+    },
+    "execution_time": 0.007616540999151766,
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2025-11-13T13:34:00.921269",
+    "user_input": "выполни test_integration.atlas",
+    "module": "executor",
+    "result": {
+      "success": true,
+      "result": "Макрос test_integration.atlas выполнен успешно",
+      "execution_time": 3.5332021713256836,
+      "macro_info": {
+        "title": "Untitled Macro",
+        "description": "Тест интеграции DSL Engine",
+        "commands_count": 3,
+        "file_path": "data/generated_macros/test_integration.atlas"
+      },
+      "performance": {
+        "macro_execution_time": 2.1118500232696533,
+        "total_time": 3.5332021713256836
+      },
+      "metadata": {
+        "module": "executor",
+        "type": "atlas_file_execution"
+      }
+    },
+    "execution_time": 3.541930500068702,
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2025-11-13T13:42:48.655899",
+    "user_input": "выполни selenium_test.atlas",
+    "module": "executor",
+    "result": {
+      "success": false,
+      "error": "Ошибка выполнения макроса: Ошибка на команде 1: Ошибка инициализации Selenium: No module named 'engines.selenium.web_driver_manager'",
+      "execution_time": 1.3500261306762695,
+      "metadata": {
+        "module": "executor",
+        "type": "error"
+      }
+    },
+    "execution_time": 1.3585112080909312,
+    "success": false,
+    "error": "Ошибка выполнения макроса: Ошибка на команде 1: Ошибка инициализации Selenium: No module named 'engines.selenium.web_driver_manager'"
+  },
+  {
+    "timestamp": "2025-11-13T13:43:18.422141",
+    "user_input": "сканируй шаблоны",
+    "module": "module_template",
+    "result": {
+      "success": true,
+      "result": "Обработан запрос в модуле module_template",
+      "explanation": "Это демонстрационный ответ от шаблона модуля",
+      "suggestions": [
+        "Попробуйте более конкретный запрос",
+        "Используйте ключевые слова для лучшего понимания"
+      ],
+      "module": "module_template",
+      "timestamp": "2025-11-13T13:43:18.422130",
+      "user_input": "сканируй шаблоны"
+    },
+    "execution_time": 0.004599584033712745,
+    "success": true,
+    "error": null
+  }
+]

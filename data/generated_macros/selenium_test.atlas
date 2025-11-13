@@ -1,0 +1,10 @@
+# Selenium Test
+# Description: Тест Selenium интеграции
+selenium_init url="https://www.google.com"
+wait 3s
+selenium_type selector="textarea[name='q']" text="Macro Assistant test"
+wait 2s
+selenium_click selector="input[name='btnK']"
+wait 5s
+selenium_close
+log "Selenium тест завершен"

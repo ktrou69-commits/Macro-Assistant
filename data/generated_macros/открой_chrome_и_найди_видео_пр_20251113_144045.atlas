@@ -1,0 +1,16 @@
+# Generated Macro
+# Description: открой Chrome и найди видео про Python на YouTube
+# Generated: 2025-11-13T14:40:45.750596
+
+open ChromeApp
+wait 2s
+click ChromeSearchField
+wait 1s
+type "видео про python на youtube"
+press enter
+wait 3s
+click ChromeSearchField
+wait 1s
+type "youtube.com"
+press enter
+wait 5s

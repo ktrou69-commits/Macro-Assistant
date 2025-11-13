@@ -1,0 +1,15 @@
+# Generated Macro
+# Description: поставь 3 лайка в TikTok
+# Generated: 2025-11-13T14:40:45.752923
+
+click ChromeSearchField
+wait 1s
+type "tiktok.com"
+press enter
+wait 5s
+repeat 3:
+  click Chrome-TikTok-Like
+  wait 1.5s
+  scroll down
+  wait 2s
+end
